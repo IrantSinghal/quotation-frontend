@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Plus, Search, Upload, Package, Pencil, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Upload, Package, Pencil, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from '@/hooks/useToast';
 import { formatCurrency } from '@/lib/utils';
@@ -232,6 +232,21 @@ export default function ProductsPage() {
     } finally { setIsLoading(false); }
   }, [page]);
 
+  const handleDeleteProduct = useCallback(async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
+    try {
+      const res = await api.deleteProduct(id);
+      if (res.success) {
+        toast.success('Product deleted');
+        load();
+      } else {
+        toast.error('Failed to delete product', res.error);
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    }
+  }, [load]);
+
   useEffect(() => { load(); }, [load]);
 
   const filtered = search
@@ -313,9 +328,17 @@ export default function ProductsPage() {
                             ? <Badge variant="success">Active</Badge>
                             : <Badge variant="secondary">Inactive</Badge>}
                         </td>
-                        <td className="px-5 py-3.5">
+                        <td className="px-5 py-3.5 flex items-center gap-1">
                           <Button variant="ghost" size="sm" onClick={() => setModalProduct(p)}>
                             <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => handleDeleteProduct(p.id, p.name)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </td>
                       </tr>
