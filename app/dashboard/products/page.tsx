@@ -53,8 +53,17 @@ function ProductFormModal({
     setSaving(true);
     try {
       const res = product
-        ? await api.updateProduct(product.id, { ...form, sku: undefined })
-        : await api.createProduct(form);
+        ? await api.updateProduct(product.id, {
+          ...form,
+          sku: undefined,
+          base_price: form.base_price.toString(), // 👈 Cast number to string
+          tax_rate: form.tax_rate.toString()     // 👈 Cast number to string (if required by your type definition)
+        })
+        : await api.createProduct({
+          ...form,
+          base_price: form.base_price, // 👈 Pass number directly
+          tax_rate: form.tax_rate
+        });
       if (res.success) {
         toast.success(product ? 'Product updated' : 'Product created');
         onSaved();
@@ -227,9 +236,9 @@ export default function ProductsPage() {
 
   const filtered = search
     ? products.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase())
-      )
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.sku.toLowerCase().includes(search.toLowerCase())
+    )
     : products;
 
   return (
@@ -272,45 +281,45 @@ export default function ProductsPage() {
               <tbody className="divide-y divide-slate-100">
                 {isLoading
                   ? Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
-                        <td key={j} className="px-5 py-4"><Skeleton className="h-4 w-full" /></td>
-                      ))}</tr>
-                    ))
-                  : filtered.length === 0
-                  ? (
-                    <tr><td colSpan={7} className="px-5 py-16 text-center">
-                      <Package className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-slate-400">No products found</p>
-                    </td></tr>
-                  )
-                  : filtered.map(p => (
-                    <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-5 py-3.5 font-mono text-xs text-slate-600">{p.sku}</td>
-                      <td className="px-5 py-3.5">
-                        <p className="font-medium text-slate-900">{p.name}</p>
-                        {p.description && <p className="text-xs text-slate-400 truncate max-w-[200px]">{p.description}</p>}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-semibold text-slate-900 tabular-nums">
-                        {formatCurrency(p.base_price, currency)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-slate-600">{parseFloat(p.tax_rate).toFixed(1)}%</td>
-                      <td className="px-5 py-3.5 text-right tabular-nums">
-                        <span className={p.stock_quantity === 0 ? 'text-red-600 font-semibold' : p.stock_quantity < 10 ? 'text-amber-600 font-semibold' : 'text-slate-700'}>
-                          {p.stock_quantity} {p.unit}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {p.is_active
-                          ? <Badge variant="success">Active</Badge>
-                          : <Badge variant="secondary">Inactive</Badge>}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <Button variant="ghost" size="sm" onClick={() => setModalProduct(p)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
+                    <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
+                      <td key={j} className="px-5 py-4"><Skeleton className="h-4 w-full" /></td>
+                    ))}</tr>
                   ))
+                  : filtered.length === 0
+                    ? (
+                      <tr><td colSpan={7} className="px-5 py-16 text-center">
+                        <Package className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                        <p className="text-slate-400">No products found</p>
+                      </td></tr>
+                    )
+                    : filtered.map(p => (
+                      <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-5 py-3.5 font-mono text-xs text-slate-600">{p.sku}</td>
+                        <td className="px-5 py-3.5">
+                          <p className="font-medium text-slate-900">{p.name}</p>
+                          {p.description && <p className="text-xs text-slate-400 truncate max-w-[200px]">{p.description}</p>}
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-semibold text-slate-900 tabular-nums">
+                          {formatCurrency(p.base_price, currency)}
+                        </td>
+                        <td className="px-5 py-3.5 text-right text-slate-600">{parseFloat(p.tax_rate).toFixed(1)}%</td>
+                        <td className="px-5 py-3.5 text-right tabular-nums">
+                          <span className={p.stock_quantity === 0 ? 'text-red-600 font-semibold' : p.stock_quantity < 10 ? 'text-amber-600 font-semibold' : 'text-slate-700'}>
+                            {p.stock_quantity} {p.unit}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          {p.is_active
+                            ? <Badge variant="success">Active</Badge>
+                            : <Badge variant="secondary">Inactive</Badge>}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <Button variant="ghost" size="sm" onClick={() => setModalProduct(p)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
                 }
               </tbody>
             </table>
